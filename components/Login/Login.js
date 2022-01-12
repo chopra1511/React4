@@ -24,17 +24,32 @@ const passReducer = (state, action) => {
   return { value: "", isValid: false };
 }
 
+const colReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    return { value: action.val, isValid: action.val.trim().length !== 0 };
+  }
+  if (action.type === "INPUT_BLUR") {
+    return { value: state.value, isValid: state.value.trim().length !== 0 };
+  }
+  return { value: "", isValid: false };
+};
+
 const Login = (props) => {
   // const [enteredEmail, setEnteredEmail] = useState('');
   // const [emailIsValid, setEmailIsValid] = useState();
   // const [enteredPassword, setEnteredPassword] = useState('');
   // const [passwordIsValid, setPasswordIsValid] = useState();
-  const [enteredColName, setEnteredCName] = useState("");
-  const [cNameIsValid, setCNameIsValid] = useState();
+  // const [enteredColName, setEnteredCName] = useState("");
+  // const [cNameIsValid, setCNameIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
 
   const [emailState, dispatchEmail] = useReducer(emailReducer, {
     value: '',
+    isValid: null,
+  });
+
+  const [colState, dispatchCol] = useReducer(colReducer, {
+    value: "",
     isValid: null,
   });
 
@@ -68,14 +83,15 @@ const Login = (props) => {
   const emailChangeHandler = (event) => {
     dispatchEmail({type: 'USER_INPUT', val: event.target.value});
 
-    setFormIsValid(event.target.value.includes("@") && passState.isValid );
+    setFormIsValid(
+      event.target.value.includes("@") && passState.isValid && colState.isValid);
   };
 
   const passwordChangeHandler = (event) => {
     dispatchPass({ type: "USER_INPUT", val: event.target.value });
 
     setFormIsValid(
-      emailState.isValid && event.target.value.trim().length > 6
+      emailState.isValid && colState.isValid && event.target.value.trim().length > 6
     );
   };
 
@@ -84,7 +100,9 @@ const Login = (props) => {
   };
 
   const colNameChangeHandler = (event) => {
-    setEnteredCName(event.target.value);
+    dispatchCol({ type: "USER_INPUT", val: event.target.value });
+
+    setFormIsValid(emailState.isValid && passState.isValid && event.target.value.trim().length !== 0);
   };
 
   const validatePasswordHandler = () => {
@@ -92,12 +110,12 @@ const Login = (props) => {
   };
 
   const validateCNameHandler = () => {
-    setCNameIsValid(enteredColName.trim().length !== 0)
+    dispatchCol({ type: "INPUT_BLUR" });
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, passState.value, enteredColName);
+    props.onLogin(emailState.value, passState.value, colState.value);
   };
 
   return (
@@ -105,7 +123,7 @@ const Login = (props) => {
       <form onSubmit={submitHandler}>
         <div
           className={`${classes.control} ${
-            emailState.isValid === false ? classes.invalid : ''
+            emailState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="email">E-Mail</label>
@@ -119,7 +137,7 @@ const Login = (props) => {
         </div>
         <div
           className={`${classes.control} ${
-            passState.isValid === false ? classes.invalid : ''
+            passState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="password">Password</label>
@@ -133,14 +151,14 @@ const Login = (props) => {
         </div>
         <div
           className={`${classes.control} ${
-            cNameIsValid === false ? classes.invalid : ""
+            colState.isValid === false ? classes.invalid : ""
           }`}
         >
           <label htmlFor="colName">College Name</label>
           <input
             type="text"
             id="cName"
-            value={enteredColName}
+            value={colState.value}
             onChange={colNameChangeHandler}
             onBlur={validateCNameHandler}
           />
